@@ -9,12 +9,18 @@ from . data_us import (
     process_covidtracking_data,
 )
 
+from . data_il import (
+    get_and_process_covidtracking_data_il,
+    get_raw_covidtracking_data_il,
+    process_covidtracking_data_il,
+)
 # Data loading functions for different countries may be registered here.
 # For US, the data loader is pre-registered. Additional countries may be
 # registered upon import of third-party modules.
 # Data cleaning must be done by the data loader function!
 LOADERS:typing.Dict[str, typing.Callable[[pd.Timestamp], pd.DataFrame]] = {
     'us': get_and_process_covidtracking_data,
+    'il': get_and_process_covidtracking_data_il
 }
 
 
