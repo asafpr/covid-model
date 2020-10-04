@@ -74,7 +74,7 @@ def get_delays_from_patient_data(file_path=None, max_delay=60):
     return delays
 
 
-def get_delay_distribution():
+def get_delay_distribution(incubation = 5):
     """ Returns the empirical delay distribution between symptom onset and
         confirmed positive case. """
 
@@ -99,4 +99,17 @@ def get_delay_distribution():
         )
         p_delay.to_csv("data/p_delay.csv", index=False)
 
+    if (incubation != INCUBATION_DAYS):
+        if (incubation > INCUBATION_DAYS):
+            new_range = np.arange(0, p_delay.index.max() + 1)
+            p_delay = p_delay.reindex(new_range, fill_value=0)
+        
+            p_delay = (
+                pd.Series(np.zeros(incubation - INCUBATION_DAYS))
+                .append(p_delay, ignore_index=True)
+                .rename("p_delay")
+            )
+        else:
+            p_delay = p_delay[INCUBATION_DAYS-incubation:]
+    p_delay = p_delay[:66]/sum(p_delay[:66])
     return p_delay
