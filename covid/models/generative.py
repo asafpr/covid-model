@@ -18,15 +18,15 @@ from covid.patients import get_delay_distribution
 class GenerativeModel:
     version = "1.0.0"
 
-    def __init__(self, region: str, observed: pd.DataFrame, buffer_days=10):
+    def __init__(self, region: str, observed: pd.DataFrame, buffer_days=10, delay=5):
         """ Takes a region (ie State) name and observed new positive and
             total test counts per day. buffer_days is the default number of
             blank days we pad on the leading edge of the time series because
             infections occur long before reports and we need to infer values
             on those days """
 
-        first_index = observed.positive.ne(0).argmax()
-        observed = observed.iloc[first_index:]
+        first_index = observed.positive.ne(0).idxmax()
+        observed = observed.loc[first_index:]
         new_index = pd.date_range(
             start=observed.index[0] - pd.Timedelta(days=buffer_days),
             end=observed.index[-1],
@@ -39,6 +39,7 @@ class GenerativeModel:
         self.model = None
         self.observed = observed
         self.region = region
+        self.delay = delay
 
     @property
     def n_divergences(self):
@@ -112,7 +113,7 @@ class GenerativeModel:
     def build(self):
         """ Builds and returns the Generative model. Also sets self.model """
 
-        p_delay = get_delay_distribution()
+        p_delay = get_delay_distribution(incubation=self.delay)
         nonzero_days = self.observed.total.gt(0)
         len_observed = len(self.observed)
         convolution_ready_gt = self._get_convolution_ready_gt(len_observed)
