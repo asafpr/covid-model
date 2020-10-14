@@ -15,7 +15,7 @@ def get_raw_covidtracking_data_il():
     return data
 
 
-def process_covidtracking_data_il(data: pd.DataFrame, run_date: pd.Timestamp):
+def process_covidtracking_data_il(data: pd.DataFrame, run_date: pd.Timestamp, norm=True):
     """ Processes raw COVIDTracking data to be in a form for the GenerativeModel.
         In many cases, we need to correct data errors or obvious outliers."""
     data["date"] = pd.to_datetime(data["Date"], format="%Y-%m-%d")
@@ -23,14 +23,15 @@ def process_covidtracking_data_il(data: pd.DataFrame, run_date: pd.Timestamp):
     data['region'] = "Israel"
     data = data.set_index(["region", "date"]).sort_index()
     data = data[["positive", "total"]]
-
+    if not norm:
+        data["total"] = 100000
     # At the real time of `run_date`, the data for `run_date` is not yet available!
     # Cutting it away is important for backtesting!
     return data.loc[idx[:, :(run_date - pd.DateOffset(1))], ["positive", "total"]]
 
 
-def get_and_process_covidtracking_data_il(run_date: pd.Timestamp):
+def get_and_process_covidtracking_data_il(run_date: pd.Timestamp, norm=True):
     """ Helper function for getting and processing COVIDTracking data at once """
     data = get_raw_covidtracking_data_il()
-    data = process_covidtracking_data_il(data, run_date)
+    data = process_covidtracking_data_il(data, run_date, norm=norm)
     return data
