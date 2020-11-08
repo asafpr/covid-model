@@ -18,7 +18,7 @@ from covid.patients import get_delay_distribution
 class GenerativeModel:
     version = "1.0.0"
 
-    def __init__(self, region: str, observed: pd.DataFrame, buffer_days=10, delay=5):
+    def __init__(self, region: str, observed: pd.DataFrame, buffer_days=10, delay=5, sigma = 0.035):
         """ Takes a region (ie State) name and observed new positive and
             total test counts per day. buffer_days is the default number of
             blank days we pad on the leading edge of the time series because
@@ -36,6 +36,7 @@ class GenerativeModel:
 
         self._trace = None
         self._inference_data = None
+        self.sigma = sigma
         self.model = None
         self.observed = observed
         self.region = region
@@ -129,7 +130,7 @@ class GenerativeModel:
             # of this number as how quickly r_t can react.
             log_r_t = pm.GaussianRandomWalk(
                 "log_r_t",
-                sigma=0.035,
+                sigma= self.sigma, #0.035,
                 dims=["date"]
             )
             r_t = pm.Deterministic("r_t", pm.math.exp(log_r_t), dims=["date"])
