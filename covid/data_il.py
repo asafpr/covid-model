@@ -34,10 +34,10 @@ def process_covidtracking_data_il(data: pd.DataFrame, run_date: pd.Timestamp, no
         In many cases, we need to correct data errors or obvious outliers."""
     if not cities:
         data["date"] = pd.to_datetime(data["Date"], format="%Y-%m-%d")
-        data = data.rename(columns={"New infected": "positive", "Tests for idenitifaction": "total"})
+        data = data.rename(columns={"New infected": "positive", "Tests for idenitifaction": "total", "New deaths": "deaths"})
         data['region'] = "Israel"
         data = data.set_index(["region", "date"]).sort_index()
-        data = data[["positive", "total"]]    
+        data = data[["positive", "total", "deaths"]]    
     else:
         # Process the cities data
         data["date"] = pd.to_datetime(data["Date"], format="%Y-%m-%d")
@@ -45,9 +45,10 @@ def process_covidtracking_data_il(data: pd.DataFrame, run_date: pd.Timestamp, no
         data = data.set_index(['region', 'date']).sort_index()
         data = data.apply(pd.to_numeric, errors='coerce')
         data['positive'] = data.groupby('region')['Cumulative_verified_cases'].diff()
+        data['deaths'] = data.groupby('region')['Cumulated_deaths'].diff()
         data['total'] = data.groupby('region')['Cumulated_number_of_diagnostic_tests'].diff()
         # Select relevant columns
-        data = data[["positive", "total"]].fillna(0)
+        data = data[["positive", "total", "deaths"]].fillna(0)
         # Add the sum of all regions
         da2 = data.groupby("date").sum()
         da2["region"] = "Israel"
@@ -57,7 +58,7 @@ def process_covidtracking_data_il(data: pd.DataFrame, run_date: pd.Timestamp, no
     # Cutting it away is important for backtesting!
     if not norm:
         data["total"] = 100000
-    return data.loc[idx[:, :(run_date - pd.DateOffset(1))], ["positive", "total"]]
+    return data.loc[idx[:, :(run_date - pd.DateOffset(1))], ["positive", "total", "deaths"]]
 
 
 def get_and_process_covidtracking_data_il(run_date: pd.Timestamp, norm=True, cities=False):
